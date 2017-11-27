@@ -1,0 +1,145 @@
+import React from "react";
+import { connect } from "react-redux";
+import ReactDOM from "react-dom";
+import axios from "axios";
+
+import * as actions from "./../../dispatcher/actions/MainActions";
+
+const validate = (email, password, gender) => {
+    // true means invalid, so our conditions got reversed
+    return {
+        email: email.length === 0,
+        password: password.length === 0,
+        gender: gender.length === 0
+    };
+}
+class Modal extends React.Component {    
+
+    constructor() {
+        super();
+        this.state = {
+            email: '',
+            password: '',
+            gender: '',
+        };
+    }
+
+    handleEmailChange = (evt) => {
+        this.setState({ email: evt.target.value });
+    }
+    
+    handlePasswordChange = (evt) => {
+        this.setState({ password: evt.target.value });
+    }
+
+    handleGenderChange = (evt) => {
+        this.setState({ gender: evt.target.value });
+    }
+
+    handleSubmit = (evt) => {
+        evt.preventDefault();
+        if (!this.canBeSubmitted()) {            
+            return;
+        }else{
+            let { onShowNotification, onGetAllModule, pagination, onChangeTotalData } = this.props;
+            let menuDom = ReactDOM.findDOMNode(this);
+            $(menuDom).modal("hide");
+            axios.post("/api/newModule", { 
+                "module_name": this.state.email, 
+                "current_page": pagination.currentPage, 
+                "per_page": pagination.perPage }
+            ).then(function (response) {
+                if(response.data.data.length > 0){
+                    onGetAllModule(response.data.data);
+                    onChangeTotalData(response.data.total);
+                }
+                onShowNotification(response.data);
+            }).catch(function (error) {
+                console.log(error);
+            });
+
+            this.setState({
+                email: '',
+                password: '',
+                gender: '',
+            });
+            
+        }
+    }
+
+    canBeSubmitted=() => {
+        const errors = validate(this.state.email, this.state.password, this.state.gender);
+        const isDisabled = Object.keys(errors).some(x => errors[x]);
+        return !isDisabled;
+    }
+    render () {
+        const errors = validate(this.state.email, this.state.password, this.state.gender);
+        
+        const isDisabled = Object.keys(errors).some(x => {
+            return errors[x]}
+        );        
+
+        return (
+            <div className="modal fade" id="myModal" tabIndex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <button type="button" className="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span className="sr-only">Close</span></button>
+                            <h4 className="modal-title" id="myModalLabel">Tạo mới mô-đun</h4>
+                        </div>
+                        <div className="modal-body">
+                            <form onSubmit={this.handleSubmit} autoComplete="off" role="form">
+                                <div className={`form-group ${ errors.email ? 'has-error' : 'has-success'}`} >
+                                    <label className="control-label" htmlFor="inputError">Email</label>
+                                    <input className="form-control" id="inputError"
+                                        type="text" placeholder="Enter email" value={this.state.email} onChange={this.handleEmailChange}
+                                    />
+                                </div>
+
+                                <div className={`form-group ${ errors.password ? 'has-error' : 'has-success'}`} >
+                                    <label className="control-label" htmlFor="inputError">Password</label>
+                                    <input className="form-control" id="inputError"
+                                        type="text" placeholder="Enter email" value={this.state.password} onChange={this.handlePasswordChange}
+                                    />
+                                </div>     
+                                <div className={`form-group ${ errors.gender ? 'has-error' : 'has-success'}`} >
+                                    <label className="control-label" htmlFor="disabledSelect">Gender</label>
+                                    <select id="disabledSelect" className="form-control" onChange={this.handleGenderChange}>
+                                        <option value="">Select gender</option>
+                                        <option value="1">Male</option>
+                                        <option value="0">Female</option>
+                                    </select>
+                                </div>                       
+                                <button type="submit" className="btn btn-primary" disabled={isDisabled}>Sign up</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        );
+    }
+}
+
+const mapStateToProps = state => {
+    return {
+        modules: state.module,
+        notification: state.notification,
+        pagination: state.pagination
+    }
+}
+
+const mapDispatchToProps = (dispatchEvent, props) => {
+    return {
+        onShowNotification: (dataNotification) => {
+            dispatchEvent(actions.ShowNotification(dataNotification));
+        },
+        onGetAllModule: (modules) => {
+            dispatchEvent(actions.AllModule(modules));
+        },
+        onChangeTotalData: (totalData) => {  
+            dispatchEvent(actions.ChangeTotalData(totalData));
+        }
+    };
+}
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(Modal);

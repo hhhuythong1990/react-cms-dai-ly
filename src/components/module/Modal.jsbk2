@@ -1,0 +1,167 @@
+import React from "react";
+import { connect } from "react-redux";
+import ReactDOM from "react-dom";
+import axios from "axios";
+
+import * as actions from "./../../dispatcher/actions/MainActions";
+
+class Modal extends React.Component {    
+
+    constructor(props) {
+        super(props);
+    
+        this.state = {
+          username: 'jasonmalfatto@moduscreate.com',
+          password: '',
+          passwordConfirm: ''
+        };
+    
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+      }
+    
+      handleChange(e) {
+        e.target.classList.add('active');
+    
+        this.setState({
+          [e.target.name]: e.target.value
+        });
+    
+        this.showInputError(e.target);
+      }
+    
+      handleSubmit(e) {    
+        e.preventDefault();
+    
+        console.log('Component state:', JSON.stringify(this.state));
+    
+        if (!this.showFormErrors()) {
+          console.log('Form is invalid: do not submit');
+        } else {
+          console.log('Form is valid: submit');
+        }
+      }
+    
+      showFormErrors() {
+        const inputs = document.querySelectorAll('input');
+        let isFormValid = true;
+    
+        inputs.forEach(input => {
+          input.classList.add('active');
+    
+          const isInputValid = this.showInputError(input);
+    
+          if (!isInputValid) {
+            isFormValid = false;
+          }
+        });
+    
+        return isFormValid;
+      }
+    
+      showInputError(input) {
+        const name = input.name;
+        
+        const validity = input.validity;
+        const label = document.getElementById(`${name}Label`).textContent;
+        const error = document.getElementById(`${name}Error`);
+    
+        const isPassword = name.indexOf('password') !== -1;
+        const isPasswordConfirm = name === 'passwordConfirm';
+        if (isPasswordConfirm) {
+          if (this.password.value !== this.passwordConfirm.value) {
+            this.passwordConfirm.setCustomValidity('Passwords do not match');
+          } else {
+            this.passwordConfirm.setCustomValidity('');
+          }
+        }
+    
+        if (!validity.valid) {
+          if (validity.valueMissing) {
+            error.textContent = `${label} is a required field`;
+          } else if (validity.typeMismatch) {
+            error.textContent = `${label} should be a valid email address`; 
+          } else if (isPassword && validity.patternMismatch) {
+            error.textContent = `${label} should be longer than 4 chars`; 
+          } else if (isPasswordConfirm && validity.customError) {
+            error.textContent = 'Passwords do not match';
+          }
+          return false;
+        }
+    
+        error.textContent = '';
+        return true;
+      }
+      
+    render () {    
+
+        return (
+            <div className="modal fade" id="myModal" tabIndex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <button type="button" className="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span className="sr-only">Close</span></button>
+                            <h4 className="modal-title" id="myModalLabel">Tạo mới mô-đun</h4>
+                        </div>
+                        <div className="modal-body">                            
+                            <form onSubmit={this.handleSubmit} noValidate>
+                                <div className="form-group">
+                                    <label id="usernameLabel">Username</label>
+                                    <input type="email" name="username"
+                                            ref={username => this.username = username}
+                                            value={this.state.username} onChange={this.handleChange}
+                                            className="form-control" required />
+                                    <div className="text-danger" id="usernameError" />
+                                </div>
+
+                                <div className="form-group">
+                                    <label id="passwordLabel">Password</label>
+                                    <input type="password" name="password"
+                                            ref={password => this.password = password}
+                                            value={this.state.password} onChange={this.handleChange}
+                                            className="form-control" pattern=".{5,}" required />
+                                    <div className="text-danger" id="passwordError" />
+                                </div>
+
+                                <div className="form-group">
+                                    <label id="passwordConfirmLabel">Confirm Password</label>
+                                    <input type="password" name="passwordConfirm"
+                                            ref={passwordConfirm => this.passwordConfirm = passwordConfirm}
+                                            value={this.state.passwordConfirm} onChange={this.handleChange}
+                                            className="form-control" required />
+                                    <div className="text-danger" id="passwordConfirmError" />
+                                </div>
+
+                                <button className="btn btn-primary">Submit</button>
+                            </form>                            
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        );
+    }
+}
+
+const mapStateToProps = state => {
+    return {
+        modules: state.module,
+        notification: state.notification,
+        pagination: state.pagination
+    }
+}
+
+const mapDispatchToProps = (dispatchEvent, props) => {
+    return {
+        onShowNotification: (dataNotification) => {
+            dispatchEvent(actions.ShowNotification(dataNotification));
+        },
+        onGetAllModule: (modules) => {
+            dispatchEvent(actions.AllModule(modules));
+        },
+        onChangeTotalData: (totalData) => {  
+            dispatchEvent(actions.ChangeTotalData(totalData));
+        }
+    };
+}
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(Modal);

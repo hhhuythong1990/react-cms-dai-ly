@@ -1,0 +1,13 @@
+export const LOG_IN = "LOG_IN";
+export const LOG_OUT = "LOG_OUT";
+
+export const CHANGE_ROUTER = "CHANGE_ROUTER";
+
+export const SHOW_NOTIFICATION = "SHOW_NOTIFICATION";
+export const HIDE_NOTIFICATION = "HIDE_NOTIFICATION";
+
+export const ALL_MODULE = "ALL_MODULE";
+
+export const DEFAULT_PAGINATION = "DEFAULT_PAGINATION";
+export const CHANGE_PAGINATION = "CHANGE_PAGINATION";
+export const CHANGE_TOTAL_DATA = "CHANGE_TOTAL_DATA";
